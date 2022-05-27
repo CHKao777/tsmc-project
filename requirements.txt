@@ -1,0 +1,8 @@
+requests-html
+requests
+beautifulsoup4
+nltk
+datetime
+rq
+redis
+pymongo
