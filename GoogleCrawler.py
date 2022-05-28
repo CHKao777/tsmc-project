@@ -2,6 +2,7 @@ import requests
 from requests_html import HTMLSession
 from bs4 import BeautifulSoup
 import time
+import datetime
 
 from redis import Redis
 from rq import Queue
@@ -13,7 +14,8 @@ import pymongo
 rq = Queue(connection=Redis('localhost', 6379))
 myclient = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = myclient["tsmc_project"]
-collect = mydb['test_url_count']
+collect = mydb['url_count']
+crawler_log = mydb['crawler_log']
 
 class GoogleCrawler():
     
@@ -70,7 +72,7 @@ class GoogleCrawler():
             json_data = {
                 'Date' : time_start,
                 'Company' : query, 
-                'Url Count' : url_count,
+                'Url_Count' : url_count,
             }
             collect.insert_one(json_data)
 
@@ -97,10 +99,22 @@ class GoogleCrawler():
 
 
 if __name__ == '__main__':
-    import datetime
-    start_date = datetime.date(2022, 5, 16)
-    num = 24
     crawler = GoogleCrawler()
-    for i in range(num):
-        crawler.google_search_all_query(str(start_date), str(start_date + datetime.timedelta(days=6)))
-        start_date -= datetime.timedelta(days=7)
+
+    while True:
+        job = crawler_log.find_one({'Status': 'undone'})
+        if job is None:
+            print('nothing to do', flush=True)
+            time.sleep(1)
+            continue
+        crawler_log.update_one({'_id':job['_id']}, {'$set':{'Status':'processing'}})
+        start_date = job['Date']
+        start_date_object = datetime.datetime.strptime(job['Date'], "%Y-%m-%d")
+        end_date_object = datetime.date(start_date_object.year, start_date_object.month, start_date_object.day) + datetime.timedelta(days=6)
+        end_date = str(end_date_object)
+
+        try:
+            crawler.google_search_all_query(start_date, end_date)
+            crawler_log.update_one({'_id':job['_id']}, {'$set':{'Status':'done'}})
+        except Exception as e:
+            crawler_log.update_one({'_id':job['_id']}, {'$set':{'Status':'undone'}})

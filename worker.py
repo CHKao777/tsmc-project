@@ -14,7 +14,7 @@ company_list = ['tsmc', 'asml', 'applied materials', 'sumco']
 
 myclient = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = myclient["tsmc_project"]
-collect = mydb['test_word_count']
+collect = mydb['word_count']
 
 rds = Redis('localhost', 6379)
 rq = Queue(connection=rds)
@@ -66,7 +66,7 @@ def company_count(text, timestamp):
         json_data = {
             'Date' : timestamp,
             'Company' : company, 
-            'Word Count' : count,
+            'Word_Count' : count,
         }
         collect.insert_one(json_data)
     

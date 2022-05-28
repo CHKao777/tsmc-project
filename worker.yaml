@@ -16,3 +16,4 @@ spec:
       containers:
       - name: worker
         image: chkao777/tsmc-project:worker
+        imagePullPolicy: Always 

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: google-crawler-controller
+spec:
+  hostNetwork: true
+  containers:
+  - name: google-crawler-controller
+    image: chkao777/tsmc-project:google_crawler_controller
+    imagePullPolicy: Always 
