@@ -35,7 +35,7 @@ class GoogleCrawler():
     def google_search_get_ready(self):
         second_since_last_search = time.time() - self.last_search_time
         if second_since_last_search < self.search_interval:
-            print('sleeping...')
+            print('sleeping...',flush=True)
             time.sleep(self.search_interval - second_since_last_search)
 
     #進行一次google search
@@ -60,7 +60,7 @@ class GoogleCrawler():
                 break
             self.enqueue(part_result)
             result += part_result
-        print('Get {:d} urls for {:s} from {:s} to {:s}'.format(len(result), query, time_start, time_end))
+        print('Get {:d} urls for {:s} from {:s} to {:s}'.format(len(result), query, time_start, time_end),flush=True)
         return result
     
     #對所有query搜尋url, 每個query的最大搜尋數量=max_search_each_query(總數通常都不會超過1000)

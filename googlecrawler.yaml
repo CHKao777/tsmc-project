@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: googlecrawler
+spec:
+  hostNetwork: true
+  containers:
+  - name: googlecrawler
+    image: chkao777/tsmc-project:googlecrawler
