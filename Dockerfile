@@ -1,21 +1,13 @@
-# FROM python:3.10-slim
-# WORKDIR /tsmc-project
-# COPY GoogleCrawler.py /tsmc-project
-# COPY worker.py /tsmc-project
-# COPY requirements.txt /tsmc-project
-# RUN pip install -r requirements.txt
-# CMD ["python", "GoogleCrawler.py"]
-
-# FROM python:3.10-slim
-# WORKDIR /tsmc-project
-# COPY GoogleCrawlerController.py /tsmc-project
-# COPY requirements.txt /tsmc-project
-# RUN pip install -r requirements.txt
-# CMD ["python", "GoogleCrawlerController.py"]
-
-FROM python:3.10-slim
+FROM python:3.10-slim as crawler
 WORKDIR /tsmc-project
-COPY worker.py /tsmc-project
-COPY requirements.txt /tsmc-project
+COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
+COPY GoogleCrawler.py GoogleCrawler.py
+CMD ["python", "GoogleCrawler.py"]
+
+FROM python:3.10-slim as worker
+WORKDIR /tsmc-project
+COPY requirements-worker.txt requirements-worker.txt
+RUN pip install -r requirements-worker.txt
+COPY worker.py worker.py
 CMD ["python", "worker.py"]

@@ -12,11 +12,15 @@ nltk.download('punkt', quiet=True)
 keyword_count_dict = {'tsmc': 0, 'asml': 0, 'applied': 0, 'materials': 0, 'sumco': 0}
 company_list = ['tsmc', 'asml', 'applied materials', 'sumco']
 
-myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+# myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+mongodb_server_hostname = 'mongodb-server'
+mongodb_client_connection = 'mongodb://{}:27017/'.format(mongodb_server_hostname)
+myclient = pymongo.MongoClient(mongodb_client_connection)
+
 mydb = myclient["tsmc_project"]
 collect = mydb['word_count']
 
-rds = Redis('localhost', 6379)
+rds = Redis('redis', 6379)
 rq = Queue(connection=rds)
 
 def work(url, timestamp):

@@ -1,0 +1,40 @@
+version: "3.9"
+services:
+  # web:
+  #   build: ./app
+  #   ports:
+  #     - "8000:5000"
+  #   volumes:
+  #     - ./app:/code
+  #   environment:
+  #     FLASK_ENV: development
+
+  crawler:
+    build:
+      context: .
+      target: crawler
+    volumes:
+      - .:/tsmc-project
+    
+  worker:
+    build:
+      context: .
+      target: worker
+    volumes:
+      - .:/tsmc-project    
+
+  # worker:
+  #     build: ./worker_nodes
+  #     ports:
+  #     - "8002:5000"
+  #     volumes:
+  #       - ./worker_nodes:/code
+  #     environment:
+  #       FLASK_ENV: development
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "8001:6379"
+  mongodb-server:
+    image: "mongo"
+
