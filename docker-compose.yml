@@ -15,15 +15,19 @@ services:
     build:
       context: .
       target: crawler
-    volumes:
-      - .:/tsmc-project
-    
+    # volumes:
+    #   - ./crawler:/tsmc-project/crawler
+  crawler-controller:
+    build:
+      context: .
+      target: crawler-controller
+
   worker:
     build:
       context: .
       target: worker
-    volumes:
-      - .:/tsmc-project    
+    # volumes:
+    #   - ./worker:/tsmc-project/worker
 
   # worker:
   #     build: ./worker_nodes

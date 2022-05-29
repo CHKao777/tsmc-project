@@ -2,8 +2,10 @@ import time
 import pymongo
 import datetime
 
-
-myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+mongodb_server_hostname = 'mongodb-server'
+mongodb_client_connection = 'mongodb://{}:27017/'.format(mongodb_server_hostname)
+myclient = pymongo.MongoClient(mongodb_client_connection)
+# myclient = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = myclient["tsmc_project"]
 collect = mydb['crawler_log']
 
