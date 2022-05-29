@@ -11,8 +11,10 @@ from worker import work
 import pymongo
 
 
-rq = Queue(connection=Redis('localhost', 6379))
-myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+rq = Queue(connection=Redis('redis', 6379))
+mongodb_server_hostname = 'mongodb-server'
+mongodb_client_connection = 'mongodb://{}:27017/'.format(mongodb_server_hostname)
+myclient = pymongo.MongoClient(mongodb_client_connection)
 mydb = myclient["tsmc_project"]
 collect = mydb['url_count']
 crawler_log = mydb['crawler_log']
