@@ -6,5 +6,5 @@ spec:
   hostNetwork: true
   containers:
   - name: google-crawler
-    image: chkao777/tsmc-project:google_crawler
+    image: chkao777/tsmc-project:crawler
     imagePullPolicy: Always 

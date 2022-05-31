@@ -1,6 +1,7 @@
 version: "3.9"
 services:
   web:
+    image: chkao777/tsmc-project:web
     build:
       context: .
       target: web
@@ -12,17 +13,20 @@ services:
       FLASK_ENV: development
 
   crawler:
+    image: chkao777/tsmc-project:crawler
     build:
-      context: .
+      context: . 
       target: crawler
     # volumes:
     #   - ./crawler:/tsmc-project/crawler
   crawler-controller:
+    image: chkao777/tsmc-project:crawler-controller
     build:
       context: .
       target: crawler-controller
 
   worker:
+    image: chkao777/tsmc-project:worker
     build:
       context: .
       target: worker

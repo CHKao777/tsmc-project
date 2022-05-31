@@ -12,15 +12,8 @@ nltk.download('punkt', quiet=True)
 keyword_count_dict = {'tsmc': 0, 'asml': 0, 'applied': 0, 'materials': 0, 'sumco': 0}
 company_list = ['tsmc', 'asml', 'applied materials', 'sumco']
 
-# myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-mongodb_server_hostname = 'mongodb-server'
-mongodb_client_connection = 'mongodb://{}:27017/'.format(mongodb_server_hostname)
-myclient = pymongo.MongoClient(mongodb_client_connection)
-
-mydb = myclient["tsmc_project"]
-collect = mydb['word_count']
-
-rds = Redis('redis', 6379)
+# rds = Redis('redis', 6379)
+rds = Redis('localhost', 6379)
 rq = Queue(connection=rds)
 
 def work(url, timestamp):
@@ -31,7 +24,7 @@ def work(url, timestamp):
     if soup is None:
         return None
     orignal_text = html_getText(soup)
-    company_count(orignal_text, timestamp)
+    return company_count(orignal_text, timestamp)
 
 def get_source(url):
     try:
@@ -60,6 +53,7 @@ def company_count(text, timestamp):
         if word in keyword_count_dict:
             keyword_count_dict[word] += 1
 
+    data_array = []
     for company in company_list:
         if len(company.split()) == 1:
             count = keyword_count_dict[company]
@@ -72,7 +66,8 @@ def company_count(text, timestamp):
             'Company' : company, 
             'Word_Count' : count,
         }
-        collect.insert_one(json_data)
+        data_array.append(json_data)
+    return data_array
     
 if __name__ == '__main__':
     worker = Worker([rq], connection=rds)

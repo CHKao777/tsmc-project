@@ -6,26 +6,37 @@ import datetime
 
 from redis import Redis
 from rq import Queue
+from rq.job import Job
 from worker import work
 
 import pymongo
 
 
-rq = Queue(connection=Redis('redis', 6379))
-mongodb_server_hostname = 'mongodb-server'
-mongodb_client_connection = 'mongodb://{}:27017/'.format(mongodb_server_hostname)
-myclient = pymongo.MongoClient(mongodb_client_connection)
-mydb = myclient["tsmc_project"]
-collect = mydb['url_count']
-crawler_log = mydb['crawler_log']
-
 class GoogleCrawler():
     
+
     def __init__(self):
         self.url = 'https://www.google.com/search?q=' 
         self.query_list = ['tsmc', 'asml', 'applied materials', 'sumco']
+
         self.search_interval = 60.0 #兩次google search的間隔時間(秒)
         self.last_search_time = time.time() #上次google search的時間
+
+        self.job_result = []
+
+        # self.connection = Redis('redis', 6379)
+        self.connection = Redis('localhost', 6379)
+        self.rq = Queue(connection=self.connection)
+        self.rq.empty()
+
+        # mongodb_server_hostname = 'mongodb-server'
+        # mongodb_client_connection = 'mongodb://{}:27017/'.format(mongodb_server_hostname)
+        # myclient = pymongo.MongoClient(mongodb_client_connection)
+        myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+        self.mydb = myclient['tsmc_project']
+        self.url_counts_collection = self.mydb['url_counts']
+        self.word_counts_collection = self.mydb['word_counts']
+
 
     def get_source(self,url):
         try:
@@ -53,7 +64,23 @@ class GoogleCrawler():
     
     def enqueue(self, url_list):
         for item in url_list:
-            rq.enqueue(work, item['url'], item['timestamp'])
+            job = Job.create(
+                func=work, 
+                args=[item['url'], item['timestamp']], 
+                connection=self.connection, 
+                result_ttl=86400
+            )
+            self.rq.enqueue_job(job)
+            self.job_result.append(job)
+
+    def retry(self, job, times):
+        for _ in range(times):
+            self.rq.enqueue_job(job, at_front=True)
+            while not job.is_finished and not job.is_failed:
+                print('waiting job to be done... check whether workers are running correctly if stucked for a long time', flush=True)
+                time.sleep(0.1)
+            if job.is_finished:
+                break
 
     #針對一個query搜尋url, 最大搜尋數量=max_search(總數通常都不會超過1000)
     def google_search_one_query(self, query, time_start, time_end, max_search):
@@ -65,18 +92,50 @@ class GoogleCrawler():
             self.enqueue(part_result)
             result += part_result
         print('Get {:d} urls for {:s} from {:s} to {:s}'.format(len(result), query, time_start, time_end),flush=True)
-        return result
+        return len(result)
     
     #對所有query搜尋url, 每個query的最大搜尋數量=max_search_each_query(總數通常都不會超過1000)
     def google_search_all_query(self, time_start, time_end, max_search_each_query=1000):
+        #initialization
+        self.rq.empty()
+        self.job_result = []
+
+        url_counts = []
         for query in self.query_list:
-            url_count = len(self.google_search_one_query(query, time_start, time_end, max_search=max_search_each_query))
+            url_count = self.google_search_one_query(query, time_start, time_end, max_search=max_search_each_query)
             json_data = {
                 'Date' : time_start,
                 'Company' : query, 
-                'Url_Count' : url_count,
+                'Url_Count' : url_count
             }
-            collect.insert_one(json_data)
+            url_counts.append(json_data)
+
+        #Wait until all jobs created in this method done, and check if all jobs are finished or not(failed)
+        #If all jobs are finished -> save word_counts_total and url_counts to db at once
+        #If some jobs are failed -> give up the attemp(word_counts_total and url_counts would not be saved)
+        word_counts_total = []
+        for job in self.job_result:
+            while not job.is_finished and not job.is_failed:
+                print('waiting job to be done... check whether workers are running correctly if stucked for a long time', flush=True)
+                time.sleep(0.1)
+            if job.is_finished:
+                if job.result:
+                    word_counts_total += job.result
+            else:
+                self.retry(job, 2)
+                if job.is_finished:
+                    if job.result:
+                        word_counts_total += job.result
+                else:
+                    return False
+        
+        #save word_counts_total and url_counts to db
+        for item in word_counts_total:
+            self.word_counts_collection.insert_one(item)
+        for item in url_counts:
+            self.url_counts_collection.insert_one(item)
+
+        return True
 
     def parse_googleResults(self, response, timestamp):
         if response is None:
@@ -103,20 +162,20 @@ class GoogleCrawler():
 if __name__ == '__main__':
     crawler = GoogleCrawler()
 
+    crawler_logs_collection = crawler.mydb['crawler_logs']
+
     while True:
-        job = crawler_log.find_one({'Status': 'undone'})
+        job = crawler_logs_collection.find_one({'Status': 'undone'})
         if job is None:
             print('nothing to do', flush=True)
-            time.sleep(1)
+            time.sleep(60)
             continue
-        crawler_log.update_one({'_id':job['_id']}, {'$set':{'Status':'processing'}})
+
         start_date = job['Date']
         start_date_object = datetime.datetime.strptime(job['Date'], "%Y-%m-%d")
         end_date_object = datetime.date(start_date_object.year, start_date_object.month, start_date_object.day) + datetime.timedelta(days=6)
         end_date = str(end_date_object)
 
-        try:
-            crawler.google_search_all_query(start_date, end_date)
-            crawler_log.update_one({'_id':job['_id']}, {'$set':{'Status':'done'}})
-        except Exception as e:
-            crawler_log.update_one({'_id':job['_id']}, {'$set':{'Status':'undone'}})
+        if_done = crawler.google_search_all_query(start_date, end_date)
+        if if_done:
+            crawler_logs_collection.update_one({'_id':job['_id']}, {'$set':{'Status':'done'}})
