@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart.js Line Chart</title>
+    <!--Chart.js JS CDN-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+</head>
+
+<body>
+    <div>
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <script>
+        var tsmcdata = [];
+        var asmldata = [];
+        var amdata = [];
+        var sumcodata = [];
+        var datearr = [];
+
+
+        datearr.push(<%= Dates_arr %>);
+        tsmcdata.push(<%= tsmc_word_count %>);
+        asmldata.push(<%= asml_word_count %>);
+        amdata.push(<%= appliedmaterials_word_count %>);
+        sumcodata.push(<%= sumco_word_count %>);
+
+
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: datearr,
+                datasets: [{
+                    data: tsmcdata,
+                    label: 'tsmc',
+                    borderColor: "#3e95cd",
+                    backgroundColor: "#7bb6dd",
+                    fill: false,//折線下方是否填滿
+                    tension: 0//折線不要曲線
+                }, {
+                    data: asmldata,
+                    label: 'asml',
+                    borderColor: "#3cba9f",
+                    backgroundColor: "#71d1bd",
+                    fill: false,
+                    tension: 0
+                }, {
+                    data: amdata,
+                    label: 'applied materials',
+                    borderColor: "#ffa500",
+                    backgroundColor: "#ffc04d",
+                    fill: false,
+                    tension: 0
+                }, {
+                    data: sumcodata,
+                    label: 'sumco',
+                    borderColor: "#c45850",
+                    backgroundColor: "#d78f89",
+                    fill: false,
+                    tension: 0
+                }
+                ]
+            },
+        });
+    </script>
+</body>
+
+</html>
