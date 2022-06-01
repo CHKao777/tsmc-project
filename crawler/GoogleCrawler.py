@@ -37,6 +37,8 @@ class GoogleCrawler():
         self.url_counts_collection = self.mydb['url_counts']
         self.word_counts_collection = self.mydb['word_counts']
 
+        self.patience = 600
+
 
     def get_source(self,url):
         try:
@@ -68,19 +70,11 @@ class GoogleCrawler():
                 func=work, 
                 args=[item['url'], item['timestamp']], 
                 connection=self.connection, 
-                result_ttl=86400
+                result_ttl=86400,
+                timeout=15,
             )
             self.rq.enqueue_job(job)
             self.job_result.append(job)
-
-    def retry(self, job, times):
-        for _ in range(times):
-            self.rq.enqueue_job(job, at_front=True)
-            while not job.is_finished and not job.is_failed:
-                print('waiting job to be done... check whether workers are running correctly if stucked for a long time', flush=True)
-                time.sleep(0.1)
-            if job.is_finished:
-                break
 
     #針對一個query搜尋url, 最大搜尋數量=max_search(總數通常都不會超過1000)
     def google_search_one_query(self, query, time_start, time_end, max_search):
@@ -111,30 +105,24 @@ class GoogleCrawler():
             url_counts.append(json_data)
 
         #Wait until all jobs created in this method done, and check if all jobs are finished or not(failed)
-        #If all jobs are finished -> save word_counts_total and url_counts to db at once
-        #If some jobs are failed -> give up the attemp(word_counts_total and url_counts would not be saved)
+        #Whether a job is finished or failed, we consider it doned
         word_counts_total = []
+        start_timestamp = time.time()
         for job in self.job_result:
             while not job.is_finished and not job.is_failed:
-                print('waiting job to be done... check whether workers are running correctly if stucked for a long time', flush=True)
-                time.sleep(0.1)
-            if job.is_finished:
-                if job.result:
-                    word_counts_total += job.result
-            else:
-                self.retry(job, 2)
-                if job.is_finished:
-                    if job.result:
-                        word_counts_total += job.result
-                else:
+                if time.time() - start_timestamp > self.patience:
                     return False
+                print('waiting job to be done... check whether workers are running correctly if stucked for a long time', flush=True)
+                time.sleep(0.5)
+            if job.result:
+                word_counts_total += job.result
         
         #save word_counts_total and url_counts to db
         for item in word_counts_total:
             self.word_counts_collection.insert_one(item)
         for item in url_counts:
             self.url_counts_collection.insert_one(item)
-
+        
         return True
 
     def parse_googleResults(self, response, timestamp):
