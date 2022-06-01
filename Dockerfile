@@ -28,3 +28,10 @@ RUN pip install -r ./frontend/requirements.txt
 EXPOSE 500
 COPY ./frontend/. ./frontend/.
 CMD ["flask", "run"]
+
+FROM node:16.15.0 as nodeserver
+WORKDIR /tsmc-project/nodeserver
+COPY ./nodeserver/. .
+RUN npm install
+EXPOSE 3000
+CMD npm start

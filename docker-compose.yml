@@ -12,6 +12,12 @@ services:
     environment:
       FLASK_ENV: development
 
+  nodeserver:
+    image: chkao777/tsmc-project:nodeserver
+    build:
+      context: .
+      target: nodeserver
+
   crawler:
     image: chkao777/tsmc-project:crawler
     build:
