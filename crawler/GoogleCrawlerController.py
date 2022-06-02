@@ -2,15 +2,14 @@ import time
 import pymongo
 import datetime
 
-# mongodb_server_hostname = 'mongodb-server'
-# mongodb_client_connection = 'mongodb://{}:27017/'.format(mongodb_server_hostname)
-# myclient = pymongo.MongoClient(mongodb_client_connection)
+
 myclient = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = myclient['tsmc_project']
 crawler_logs_collection = mydb['crawler_logs']
 
 def add_new_date(num_week):
-    start_date = datetime.date.today() - datetime.timedelta(days = 7 + datetime.date.today().weekday())
+    start_date = datetime.date.today() - \
+        datetime.timedelta(days = 7 + datetime.date.today().weekday())
     if_add_new_date = False
     for _ in range(num_week):
         x = crawler_logs_collection.find_one({'Date': str(start_date)})

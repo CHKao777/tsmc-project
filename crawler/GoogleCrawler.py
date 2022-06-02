@@ -13,32 +13,26 @@ import pymongo
 
 
 class GoogleCrawler():
-    
 
     def __init__(self):
         self.url = 'https://www.google.com/search?q=' 
         self.query_list = ['tsmc', 'asml', 'applied materials', 'sumco']
 
         self.search_interval = 60.0 #兩次google search的間隔時間(秒)
-        self.last_search_time = time.time() #上次google search的時間
+        self.last_search_time = time.time() #gggoogle search的時間
 
         self.job_result = []
 
-        # self.connection = Redis('redis', 6379)
         self.connection = Redis('localhost', 6379)
         self.rq = Queue(connection=self.connection)
         self.rq.empty()
 
-        # mongodb_server_hostname = 'mongodb-server'
-        # mongodb_client_connection = 'mongodb://{}:27017/'.format(mongodb_server_hostname)
-        # myclient = pymongo.MongoClient(mongodb_client_connection)
         myclient = pymongo.MongoClient("mongodb://localhost:27017/")
         self.mydb = myclient['tsmc_project']
         self.url_counts_collection = self.mydb['url_counts']
         self.word_counts_collection = self.mydb['word_counts']
 
         self.patience = 600
-
 
     def get_source(self,url):
         try:
@@ -58,12 +52,14 @@ class GoogleCrawler():
     #進行一次google search
     def google_search_once(self, query, time_start, time_end, serp_start, num):
         self.google_search_get_ready()
-        url = self.url + query + ' before:{before} after:{after}&start={serp_start}&num={num}&hl=en'.format(before=time_end, after=time_start, serp_start=serp_start, num=num)
+        url = self.url + query + \
+            ' before:{:s} after:{:s}&start={:s}&num={:s}&hl=en'.format(time_end, time_start, serp_start, num)
         print('[Check][URL] URL : {url}'.format(url=url),flush=True)
         response = self.get_source(url)
         self.last_search_time = time.time()
         return self.parse_googleResults(response, time_start)
     
+    #將url_list內的url打包成job, 並enqueue到redis queue, 並在job的結果存於self.job_result
     def enqueue(self, url_list):
         for item in url_list:
             job = Job.create(
@@ -75,6 +71,21 @@ class GoogleCrawler():
             )
             self.rq.enqueue_job(job)
             self.job_result.append(job)
+    
+    #檢查self.job_result內的job是否都完成,並將job的執行結果回傳
+    def collect_result(self):
+        word_counts_total = []
+        start_timestamp = time.time()
+        for job in self.job_result:
+            while not job.is_finished and not job.is_failed:
+                if time.time() - start_timestamp > self.patience:
+                    return None
+                print('waiting job to be done... check whether workers are '\
+                    'running correctly if stucked for a long time', flush=True)
+                time.sleep(0.5)
+            if job.result:
+                word_counts_total += job.result
+        return word_counts_total
 
     #針對一個query搜尋url, 最大搜尋數量=max_search(總數通常都不會超過1000)
     def google_search_one_query(self, query, time_start, time_end, max_search):
@@ -104,19 +115,14 @@ class GoogleCrawler():
             }
             url_counts.append(json_data)
 
-        #Wait until all jobs created in this method done, and check if all jobs are finished or not(failed)
-        #Whether a job is finished or failed, we consider it doned
-        word_counts_total = []
-        start_timestamp = time.time()
-        for job in self.job_result:
-            while not job.is_finished and not job.is_failed:
-                if time.time() - start_timestamp > self.patience:
-                    return False
-                print('waiting job to be done... check whether workers are running correctly if stucked for a long time', flush=True)
-                time.sleep(0.5)
-            if job.result:
-                word_counts_total += job.result
+        word_counts_total = self.collect_result()
+        if word_counts_total is None:
+            print('google_search_all_query on {:s} is failed. word_counts and '\
+                'url_counts will not be save to db.'.format(time_start), flush=True)
+            return False
         
+        print('google_search_all_query on {:s} succeeds. word_counts and '\
+            'url_counts will be save to db.'.format(time_start), flush=True)
         #save word_counts_total and url_counts to db
         for item in word_counts_total:
             self.word_counts_collection.insert_one(item)
@@ -161,7 +167,8 @@ if __name__ == '__main__':
 
         start_date = job['Date']
         start_date_object = datetime.datetime.strptime(job['Date'], "%Y-%m-%d")
-        end_date_object = datetime.date(start_date_object.year, start_date_object.month, start_date_object.day) + datetime.timedelta(days=6)
+        end_date_object = datetime.date(start_date_object.year, start_date_object.month, start_date_object.day) + \
+            datetime.timedelta(days=6)
         end_date = str(end_date_object)
 
         if_done = crawler.google_search_all_query(start_date, end_date)
