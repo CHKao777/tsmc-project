@@ -1,12 +1,9 @@
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
-//const urlmodel = require('./url_count');
-//const wordmodel = require('./word_count');
-//const word_count = require('./word_count');
-//const url_count = require('./url_count');
 const company = ['tsmc', 'asml', 'applied materials', 'sumco'];
 const Dates = [];
+const intDates = [];
 const TOTAL_URLC = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const TSMC_WC = [];
 const TSMC_URLC = [];
@@ -19,52 +16,67 @@ const S_URLC = [];
 
 app.set('view engine', 'ejs');
 
-function checkDate() {
+//catch now Date and deal with some operation
+function settingDate() {
     var today = new Date();
+    //check what day of the week
     switch (today.getDay()) {
-        case 0: {
+        case 0: { //Sunday
             today.setDate(today.getDate() - 13);
             break;
         }
-        case 1: {
+        case 1: { //Monday
             today.setDate(today.getDate() - 7);
             break;
         }
-        case 2: {
+        case 2: { //Tuesday
             today.setDate(today.getDate() - 8);
             break;
         }
-        case 3: {
+        case 3: { //Wednesday
             today.setDate(today.getDate() - 9);
             break;
         }
-        case 4: {
+        case 4: { //Thursday
             today.setDate(today.getDate() - 10);
             break;
         }
-        case 5: {
+        case 5: { //Friday
             today.setDate(today.getDate() - 11);
             break;
         }
-        case 6: {
+        case 6: { //Saturday
             today.setDate(today.getDate() - 12);
             break;
         }
     }
+    //transfer Date to YYYY-MM-DD format
     Dates.push(today.toISOString().split('T')[0]);
-    for (let i = 0; i < 23; i++) {
+
+    //transfer Date to YYYYMMDD format
+    intDates[0] = today.toLocaleDateString('en-GB').split('/').reverse().join('');
+
+    //this for is used to push forward half a year
+    for (let i = 1; i < 24; i++) {
         today.setDate(today.getDate() - 7);
+        intDates[i] = today.toLocaleDateString('en-GB').split('/').reverse().join('');
         Dates.unshift(today.toISOString().split('T')[0]);
     }
-    console.log(Dates);
-    console.log(Dates.length);
+    intDates.reverse();
+    for (let i = 0; i < intDates.length; i++) {
+        intDates[i] = parseInt(intDates[i])
+    }
 }
-checkDate();
+settingDate();
 
+
+//mongoDB connection
 mongoose.connect('mongodb://localhost/tsmc_project', () => {
     console.log('DB connect!');
 }, err => console.log("errormesageDBconnecting:" + err));
 
+
+//mongoDB word_counts collection Schema defination
 const wordSchema = mongoose.Schema({
     Date: String,
     Company: String,
@@ -72,6 +84,8 @@ const wordSchema = mongoose.Schema({
 })
 const wordModel = mongoose.model('wordModel', wordSchema, 'word_counts');
 
+
+//mongoDB url_counts collection Schema defination
 const urlSchema = mongoose.Schema({
     Date: String,
     Company: String,
@@ -80,6 +94,7 @@ const urlSchema = mongoose.Schema({
 const urlModel = mongoose.model('urlModel', urlSchema, 'url_counts');
 
 run();
+//catch the DB data and do something
 async function run() {
     try {
         let tmp1 = 0;
@@ -101,30 +116,23 @@ async function run() {
                 }
 
                 for (let k = 0; k < worddata.length; k++) {
-                    console.log(worddata[k].Date);
                     tmp1 += worddata[k].Word_Count;
                 }
                 if (i == 0) {
                     TSMC_WC.push(tmp1);
-                    //TSMC_URLC.push(tmp2);
                 } else if (i == 1) {
                     ASML_WC.push(tmp1);
-                    //ASML_URLC.push(tmp2);
                 } else if (i == 2) {
                     AM_WC.push(tmp1);
-                    //AM_URLC.push(tmp2);
                 } else {
                     S_WC.push(tmp1);
-                    //S_URLC.push(tmp2);
                 }
                 tmp1 = 0;
-                //tmp2 = 0;
             }
         }
         for (let i = 0; i < company.length; i++) {
             for (let j = 0; j < Dates.length; j++) {
                 const urldata = await urlModel.find({ Company: company[i], Date: Dates[j] });
-                //console.log(urldata);
                 if (urldata.length == 0) {
                     if (i == 0) {
                         TSMC_URLC.push(-1);
@@ -141,19 +149,14 @@ async function run() {
                     tmp2 += urldata[k].Url_Count;
                 }
                 if (i == 0) {
-                    //TSMC_WC.push(tmp1);
                     TSMC_URLC.push(tmp2);
                 } else if (i == 1) {
-                    //ASML_WC.push(tmp1);
                     ASML_URLC.push(tmp2);
                 } else if (i == 2) {
-                    //AM_WC.push(tmp1);
                     AM_URLC.push(tmp2);
                 } else {
-                    //S_WC.push(tmp1);
                     S_URLC.push(tmp2);
                 }
-                //tmp1 = 0;
                 tmp2 = 0;
             }
         }
@@ -167,8 +170,6 @@ async function run() {
                 TOTAL_URLC[i] += data[j].Url_Count;
             }
         }
-        //console.log(Dates);
-        //console.log(ASML_WC);
     } catch (e) {
         console.log(e.message);
     }
@@ -177,7 +178,7 @@ async function run() {
 
 app.get('/word_count', (req, res) => {
     res.render('wordcount', {
-        Dates_arr: Dates,
+        Dates_arr: intDates,
         tsmc_word_count: TSMC_WC,
         asml_word_count: ASML_WC,
         appliedmaterials_word_count: AM_WC,
@@ -186,7 +187,7 @@ app.get('/word_count', (req, res) => {
 });
 app.get('/url_count', (req, res) => {
     res.render('urlcount', {
-        Dates_arr: Dates,
+        Dates_arr: intDates,
         tsmc_url_count: TSMC_URLC,
         asml_url_count: ASML_URLC,
         appliedmaterials_url_count: AM_URLC,
