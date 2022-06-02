@@ -113,5 +113,3 @@ spec:
       - name: nodeserver
         image: chkao777/tsmc-project:nodeserver
         imagePullPolicy: Always
-        ports:
-      - containerPort: 3000
