@@ -25,6 +25,7 @@ services:
       target: crawler
     # volumes:
     #   - ./crawler:/tsmc-project/crawler
+
   crawler-controller:
     image: chkao777/tsmc-project:crawler-controller
     build:
@@ -39,22 +40,9 @@ services:
     # volumes:
     #   - ./worker:/tsmc-project/worker
 
-  # worker:
-  #     build: ./worker_nodes
-  #     ports:
-  #     - "8002:5000"
-  #     volumes:
-  #       - ./worker_nodes:/code
-  #     environment:
-  #       FLASK_ENV: development
+
   redis:
     image: "redis:alpine"
   mongodb-server:
     image: "mongo"
-  # rq-dashboard:
-  #   image: "eoranged/rq-dashboard"
-  #   ports:
-  #     - "8001:9181"
-
-
-
+    
