@@ -60,18 +60,52 @@ spec:
         persistentVolumeClaim:
           claimName: mongo-pvc
 ---
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: redis-server
+  name: redis
+  labels:
+    app: redis
+    role: leader
+    tier: backend
 spec:
-  hostNetwork: true
-  containers:
-  - name: redis-server
-    image: redis
-    imagePullPolicy: IfNotPresent 
-    ports:
-      - containerPort: 6379
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+        role: leader
+        tier: backend
+    spec:
+      containers:
+      - name: leader
+        image: redis:alpine
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app: redis
+    role: leader
+    tier: backend
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+  selector:
+    app: redis
+    role: leader
+    tier: backend
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -113,3 +147,47 @@ spec:
       - name: nodeserver
         image: chkao777/tsmc-project:nodeserver
         imagePullPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+        app: rq-dashboard
+        tier: frontend
+  template:
+    metadata:
+      labels:
+        app: rq-dashboard
+        tier: frontend
+    spec:
+      containers:
+      - name: rq-dashboard
+        image: docker.io/jayzhan/tsmc-project:rq-dashboard
+        env:
+        - name: GET_HOSTS_FROM
+          value: "dns"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    app: rq-dashboard
+    tier: frontend
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 5000  
+  selector:
+    app: rq-dashboard
+    tier: frontend

@@ -39,7 +39,7 @@ class GoogleCrawler():
 
         self.patience = 600
 
-    def get_source(self,url):
+    def get_source(self, url):
         try:
             session = HTMLSession()
             response = session.get(url, timeout=10)
