@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
+const expressLayouts = require('express-ejs-layouts');
 const company = ['tsmc', 'asml', 'applied materials', 'sumco'];
 const Dates = [];
 const intDates = [];
@@ -15,6 +16,7 @@ const S_WC = [];
 const S_URLC = [];
 
 app.set('view engine', 'ejs');
+app.use(expressLayouts);
 
 //catch now Date and deal with some operation
 function settingDate() {
@@ -175,8 +177,11 @@ async function run() {
     }
 }
 
+app.get('/', (req, res) => {
+    res.render('homepage');
+})
 
-app.get('/word_count', (req, res) => {
+app.get('/wordcount', (req, res) => {
     res.render('wordcount', {
         Dates_arr: intDates,
         tsmc_word_count: TSMC_WC,
@@ -185,7 +190,7 @@ app.get('/word_count', (req, res) => {
         sumco_word_count: S_WC
     });
 });
-app.get('/url_count', (req, res) => {
+app.get('/urlcount', (req, res) => {
     res.render('urlcount', {
         Dates_arr: intDates,
         tsmc_url_count: TSMC_URLC,
