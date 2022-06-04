@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   web:
-    image: chkao777/tsmc-project:web
+    image: jayzhan/tsmc-project:rq-dashboard
     build:
       context: .
       target: web
@@ -11,6 +11,7 @@ services:
       - ./frontend:/tsmc-project/frontend
     environment:
       FLASK_ENV: development
+
 
   nodeserver:
     image: chkao777/tsmc-project:nodeserver
@@ -43,6 +44,8 @@ services:
 
   redis:
     image: "redis:alpine"
+    # hostname: redis
   mongodb-server:
     image: "mongo"
+    # hostname: mongodb-server
     
