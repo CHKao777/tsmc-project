@@ -23,11 +23,16 @@ class GoogleCrawler():
 
         self.job_result = []
 
-        self.connection = Redis('localhost', 6379)
+        self.connection = Redis('redis', 6379)
+        # self.connection = Redis('localhost', 6379)
         self.rq = Queue(connection=self.connection)
         self.rq.empty()
 
-        myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+        mongodb_server_hostname = 'mongodb-server'
+        mongodb_client_connection = 'mongodb://{}:27017/'.format(mongodb_server_hostname)
+        myclient = pymongo.MongoClient(mongodb_client_connection)
+
+        # myclient = pymongo.MongoClient("mongodb://localhost:27017/")
         self.mydb = myclient['tsmc_project']
         self.url_counts_collection = self.mydb['url_counts']
         self.word_counts_collection = self.mydb['word_counts']

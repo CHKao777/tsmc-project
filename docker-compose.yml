@@ -23,8 +23,9 @@ services:
     build:
       context: . 
       target: crawler
-    # volumes:
-    #   - ./crawler:/tsmc-project/crawler
+    volumes:
+      - ./crawler:/tsmc-project/crawler
+
   crawler-controller:
     image: chkao777/tsmc-project:crawler-controller
     build:
