@@ -1,18 +1,18 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: batch/v1
+kind: CronJob
 metadata:
-  name: google-crawler
+  name: crawler
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: google-crawler
-  template:
-    metadata:
-      labels:
-        app: google-crawler
+  schedule: "*/10 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
     spec:
-      containers:
-      - name: google-crawler
-        image: chkao777/tsmc-project:crawler
-        imagePullPolicy: Always     
+      template:
+        spec:
+          containers:
+          - name: crawler
+            image: chkao777/tsmc-project:crawler
+            imagePullPolicy: Always     
+          restartPolicy: OnFailure
