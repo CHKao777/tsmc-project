@@ -12,7 +12,7 @@ nltk.download('punkt', quiet=True)
 keyword_count_dict = {'tsmc': 0, 'asml': 0, 'applied': 0, 'materials': 0, 'sumco': 0}
 company_list = ['tsmc', 'asml', 'applied materials', 'sumco']
 
-rds = Redis('localhost', 6379)
+rds = Redis('redis-service', 6379)
 rq = Queue(connection=rds)
 
 def work(url, timestamp):

@@ -23,11 +23,11 @@ class GoogleCrawler():
 
         self.job_result = []
 
-        self.connection = Redis('localhost', 6379)
+        self.connection = Redis('redis-service', 6379)
         self.rq = Queue(connection=self.connection)
         self.rq.empty()
 
-        myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+        myclient = pymongo.MongoClient("mongodb://mongodb-service:27017/")
         self.mydb = myclient['tsmc_project']
         self.url_counts_collection = self.mydb['url_counts']
         self.word_counts_collection = self.mydb['word_counts']
@@ -74,7 +74,7 @@ class GoogleCrawler():
     
     #檢查self.job_result內的job是否都完成,並將job的執行結果回傳
     def collect_result(self):
-        word_counts_total = []
+        company_count_dict = {'tsmc': 0, 'asml': 0, 'applied materials': 0, 'sumco': 0}
         start_timestamp = time.time()
         for job in self.job_result:
             while not job.is_finished and not job.is_failed:
@@ -84,8 +84,9 @@ class GoogleCrawler():
                     'running correctly if stucked for a long time', flush=True)
                 time.sleep(0.5)
             if job.result:
-                word_counts_total += job.result
-        return word_counts_total
+                for item in job.result:
+                    company_count_dict[item['Company']] += item['Word_Count']
+        return company_count_dict
 
     #針對一個query搜尋url, 最大搜尋數量=max_search(總數通常都不會超過1000)
     def google_search_one_query(self, query, time_start, time_end, max_search):
@@ -115,17 +116,24 @@ class GoogleCrawler():
             }
             url_counts.append(json_data)
 
-        word_counts_total = self.collect_result()
-        if word_counts_total is None:
+        company_count_dict = self.collect_result()
+        if company_count_dict is None:
             print('google_search_all_query on {:s} is failed. word_counts and '\
                 'url_counts will not be save to db.'.format(time_start), flush=True)
             return False
         
         print('google_search_all_query on {:s} succeeds. word_counts and '\
             'url_counts will be save to db.'.format(time_start), flush=True)
+            
         #save word_counts_total and url_counts to db
-        for item in word_counts_total:
-            self.word_counts_collection.insert_one(item)
+        for company, word_count in company_count_dict.items():
+            json_data = {
+                'Date' : time_start,
+                'Company' : company, 
+                'Word_Count' : word_count
+            }
+            self.word_counts_collection.insert_one(json_data)
+
         for item in url_counts:
             self.url_counts_collection.insert_one(item)
         
