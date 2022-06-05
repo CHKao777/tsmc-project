@@ -3,14 +3,7 @@ import pymongo
 import datetime
 
 
-<<<<<<< HEAD
 myclient = pymongo.MongoClient("mongodb://mongodb-service:27017/")
-=======
-# myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-mongodb_server_hostname = 'mongodb-server'
-mongodb_client_connection = 'mongodb://{}:27017/'.format(mongodb_server_hostname)
-myclient = pymongo.MongoClient(mongodb_client_connection)
->>>>>>> e4b4b08fc875164a598132c50f0b1411fcf111f1
 mydb = myclient['tsmc_project']
 
 def add_new_date(crawler_logs_collection, num_week, start_date):
