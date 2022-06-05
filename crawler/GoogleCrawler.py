@@ -7,9 +7,7 @@ import datetime
 from redis import Redis
 from rq import Queue
 from rq.job import Job
-
-# use relative import
-from .worker import work
+from worker import work
 
 import pymongo
 
