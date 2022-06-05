@@ -1,7 +1,5 @@
-import datetime
 from datetime import date
-from crawler.GoogleCrawlerController import add_new_date
-
+from crawler.GoogleCrawler import add_new_date
 
 def test_mongodb_log_basic(mongodb):
     assert 'crawler_logs' in mongodb.list_collection_names()
@@ -10,9 +8,9 @@ def test_mongodb_log_basic(mongodb):
 
 def test_add_new_date(mongodb):
     assert 'crawler_logs' in mongodb.list_collection_names()
-    
+
     start_date = date.fromisoformat('2022-06-01')
-    
+
     add_new_date(mongodb.crawler_logs, 1, start_date)
     log = mongodb.crawler_logs.find_one({'Date': '2022-06-01'})
     assert log
@@ -20,7 +18,7 @@ def test_add_new_date(mongodb):
     assert not log
 
     start_date = date.fromisoformat('2022-06-03')
-    
+
     add_new_date(mongodb.crawler_logs, 1, start_date)
     log = mongodb.crawler_logs.find_one({'Date': '2022-06-03'})
     assert log
