@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: google-crawler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: google-crawler
+  template:
+    metadata:
+      labels:
+        app: google-crawler
+    spec:
+      containers:
+      - name: google-crawler
+        image: chkao777/tsmc-project:crawler
+        imagePullPolicy: Always     

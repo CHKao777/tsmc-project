@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodeserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nodeserver
+  template:
+    metadata:
+      labels:
+        app: nodeserver
+    spec:
+      containers:
+      - name: nodeserver
+        image: chkao777/tsmc-project:nodeserver
+        imagePullPolicy: Always
+
+# apiVersion: batch/v1
+# kind: CronJob
+# metadata:
+#   name: nodeserver
+# spec:
+#   schedule: "*/30 * * * *"
+#   concurrencyPolicy: Replace
+#   jobTemplate:
+#     spec:
+#       template:
+#         metadata:
+#           labels:
+#             app: nodeserver
+#         spec:
+#           containers:
+#           - name: nodeserver
+#             image: chkao777/tsmc-project:nodeserver
+#             imagePullPolicy: IfNotPresent
+#           restartPolicy: OnFailure
