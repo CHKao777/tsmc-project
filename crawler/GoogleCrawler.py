@@ -23,11 +23,11 @@ class GoogleCrawler():
 
         self.job_result = []
 
-        self.connection = Redis('redis-service', 6379)
+        self.connection = Redis('redis', 6379)
         self.rq = Queue(connection=self.connection)
         self.rq.empty()
 
-        myclient = pymongo.MongoClient("mongodb://mongodb-service:27017/")
+        myclient = pymongo.MongoClient("mongodb://mongodb:27017/")
         self.mydb = myclient['tsmc_project']
         self.url_counts_collection = self.mydb['url_counts']
         self.word_counts_collection = self.mydb['word_counts']
@@ -161,17 +161,33 @@ class GoogleCrawler():
         return output
 
 
+def add_new_date(crawler_logs_collection, num_week, start_date):
+    for _ in range(num_week):
+        x = crawler_logs_collection.find_one({'Date': str(start_date)})
+        if x is None:
+            json_data = {
+                'Date': str(start_date),
+                'Status': 'undone'
+            }
+            crawler_logs_collection.insert_one(json_data)
+            print('add {:s} to collection crawler_logs, status:undone '.format(str(start_date)), flush=True)
+        start_date -= datetime.timedelta(days=7)
+
+
 if __name__ == '__main__':
     crawler = GoogleCrawler()
 
     crawler_logs_collection = crawler.mydb['crawler_logs']
 
+    start_date = datetime.date.today() - \
+        datetime.timedelta(days = 7 + datetime.date.today().weekday())
+    add_new_date(crawler_logs_collection, 30, start_date)
+
     while True:
         job = crawler_logs_collection.find_one({'Status': 'undone'})
         if job is None:
-            print('nothing to do', flush=True)
-            time.sleep(60)
-            continue
+            print('all jobs are done, exit crawler', flush=True)
+            break
 
         start_date = job['Date']
         start_date_object = datetime.datetime.strptime(job['Date'], "%Y-%m-%d")
