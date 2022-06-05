@@ -8,8 +8,8 @@ from redis import Redis
 from rq import Queue
 from rq.job import Job
 
-# use relative import
-from .worker import work
+from worker import work
+
 
 import pymongo
 
@@ -176,13 +176,18 @@ def add_new_date(crawler_logs_collection, num_week, start_date):
         start_date -= datetime.timedelta(days=7)
 
 
+def get_13_days(day):
+    start_date = day - datetime.timedelta(days = 7 + datetime.date.today().weekday())
+    return start_date
+
+
 if __name__ == '__main__':
     crawler = GoogleCrawler()
 
     crawler_logs_collection = crawler.mydb['crawler_logs']
 
-    start_date = datetime.date.today() - \
-        datetime.timedelta(days = 7 + datetime.date.today().weekday())
+    today = datetime.date.today()
+    start_date = get_13_days(today)
     add_new_date(crawler_logs_collection, 30, start_date)
 
     while True:
@@ -190,7 +195,7 @@ if __name__ == '__main__':
         if job is None:
             print('all jobs are done, exit crawler', flush=True)
             break
-
+        print(job)
         start_date = job['Date']
         start_date_object = datetime.datetime.strptime(job['Date'], "%Y-%m-%d")
         end_date_object = datetime.date(start_date_object.year, start_date_object.month, start_date_object.day) + \
