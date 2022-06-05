@@ -3,77 +3,85 @@ const app = express();
 const mongoose = require('mongoose');
 const expressLayouts = require('express-ejs-layouts');
 const company = ['tsmc', 'asml', 'applied materials', 'sumco'];
-const Dates = [];
-const intDates = [];
-const TOTAL_URLC = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-const TSMC_WC = [];
-const TSMC_URLC = [];
-const ASML_WC = [];
-const ASML_URLC = [];
-const AM_WC = [];
-const AM_URLC = [];
-const S_WC = [];
-const S_URLC = [];
+var Dates = [];
+var intDates = [];
+var TOTAL_URLC = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+var TSMC_WC = [];
+var TSMC_URLC = [];
+var ASML_WC = [];
+var ASML_URLC = [];
+var AM_WC = [];
+var AM_URLC = [];
+var S_WC = [];
+var S_URLC = [];
 
 app.set('view engine', 'ejs');
 app.use(expressLayouts);
 
 //catch now Date and deal with some operation
 function settingDate() {
-    var today = new Date();
-    //check what day of the week
-    switch (today.getDay()) {
-        case 0: { //Sunday
-            today.setDate(today.getDate() - 13);
-            break;
+    console.log('in settingDate');
+    return new Promise((resolve, reject) => {
+        var today = new Date();
+        //check what day of the week
+        switch (today.getDay()) {
+            case 0: { //Sunday
+                today.setDate(today.getDate() - 13);
+                break;
+            }
+            case 1: { //Monday
+                today.setDate(today.getDate() - 7);
+                break;
+            }
+            case 2: { //Tuesday
+                today.setDate(today.getDate() - 8);
+                break;
+            }
+            case 3: { //Wednesday
+                today.setDate(today.getDate() - 9);
+                break;
+            }
+            case 4: { //Thursday
+                today.setDate(today.getDate() - 10);
+                break;
+            }
+            case 5: { //Friday
+                today.setDate(today.getDate() - 11);
+                break;
+            }
+            case 6: { //Saturday
+                today.setDate(today.getDate() - 12);
+                break;
+            }
         }
-        case 1: { //Monday
+        //init 
+        Dates.length = 0;
+        intDates.length = 0;
+        
+        //transfer Date to YYYY-MM-DD format
+        Dates.push(today.toISOString().split('T')[0]);
+
+        //transfer Date to YYYYMMDD format
+        intDates[0] = today.toLocaleDateString('en-GB').split('/').reverse().join('');
+
+        //this for is used to push forward half a year
+        for (let i = 1; i < 24; i++) {
             today.setDate(today.getDate() - 7);
-            break;
+            intDates[i] = today.toLocaleDateString('en-GB').split('/').reverse().join('');
+            Dates.unshift(today.toISOString().split('T')[0]);
         }
-        case 2: { //Tuesday
-            today.setDate(today.getDate() - 8);
-            break;
+        intDates.reverse();
+        for (let i = 0; i < intDates.length; i++) {
+            intDates[i] = parseInt(intDates[i])
         }
-        case 3: { //Wednesday
-            today.setDate(today.getDate() - 9);
-            break;
-        }
-        case 4: { //Thursday
-            today.setDate(today.getDate() - 10);
-            break;
-        }
-        case 5: { //Friday
-            today.setDate(today.getDate() - 11);
-            break;
-        }
-        case 6: { //Saturday
-            today.setDate(today.getDate() - 12);
-            break;
-        }
-    }
-    //transfer Date to YYYY-MM-DD format
-    Dates.push(today.toISOString().split('T')[0]);
-
-    //transfer Date to YYYYMMDD format
-    intDates[0] = today.toLocaleDateString('en-GB').split('/').reverse().join('');
-
-    //this for is used to push forward half a year
-    for (let i = 1; i < 24; i++) {
-        today.setDate(today.getDate() - 7);
-        intDates[i] = today.toLocaleDateString('en-GB').split('/').reverse().join('');
-        Dates.unshift(today.toISOString().split('T')[0]);
-    }
-    intDates.reverse();
-    for (let i = 0; i < intDates.length; i++) {
-        intDates[i] = parseInt(intDates[i])
-    }
+        console.log('out settingDate');
+        resolve();
+    });
 }
-settingDate();
 
 
 //mongoDB connection
-mongoose.connect('mongodb://mongodb-service:27017/tsmc_project', () => {
+mongoose.connect('mongodb://mongodb:27017/tsmc_project', () => {
     console.log('DB connect!');
 }, err => console.log("errormesageDBconnecting:" + err));
 
@@ -95,9 +103,20 @@ const urlSchema = mongoose.Schema({
 })
 const urlModel = mongoose.model('urlModel', urlSchema, 'url_counts');
 
-run();
 //catch the DB data and do something
 async function run() {
+    console.log('in run');
+    //init
+    TOTAL_URLC = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    TSMC_WC.length = 0;
+    TSMC_URLC.length = 0;
+    ASML_WC.length = 0;
+    ASML_URLC.length = 0;
+    AM_WC.length = 0;
+    AM_URLC.length = 0;
+    S_WC.length = 0;
+    S_URLC.length = 0;
+
     try {
         let tmp1 = 0;
         let tmp2 = 0;
@@ -175,13 +194,17 @@ async function run() {
     } catch (e) {
         console.log(e.message);
     }
+    console.log('out run');
 }
 
 app.get('/', (req, res) => {
     res.render('homepage');
 })
 
-app.get('/wordcount', (req, res) => {
+app.get('/wordcount', async (req, res) => {
+    await settingDate();
+    await run();
+    console.log('in render');
     res.render('wordcount', {
         Dates_arr: intDates,
         tsmc_word_count: TSMC_WC,
@@ -190,7 +213,10 @@ app.get('/wordcount', (req, res) => {
         sumco_word_count: S_WC
     });
 });
-app.get('/urlcount', (req, res) => {
+app.get('/urlcount', async (req, res) => {
+    await settingDate();
+    await run();
+    console.log('in render');
     res.render('urlcount', {
         Dates_arr: intDates,
         tsmc_url_count: TSMC_URLC,
