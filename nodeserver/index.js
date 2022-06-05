@@ -73,7 +73,7 @@ settingDate();
 
 
 //mongoDB connection
-mongoose.connect('mongodb://localhost/tsmc_project', () => {
+mongoose.connect('mongodb://mongodb-service:27017/tsmc_project', () => {
     console.log('DB connect!');
 }, err => console.log("errormesageDBconnecting:" + err));
 
