@@ -8,8 +8,8 @@ from redis import Redis
 from rq import Queue
 from rq.job import Job
 
-# use relative import
-from .worker import work
+from worker import work
+
 
 import pymongo
 
@@ -195,7 +195,7 @@ if __name__ == '__main__':
         if job is None:
             print('all jobs are done, exit crawler', flush=True)
             break
-
+        print(job)
         start_date = job['Date']
         start_date_object = datetime.datetime.strptime(job['Date'], "%Y-%m-%d")
         end_date_object = datetime.date(start_date_object.year, start_date_object.month, start_date_object.day) + \
