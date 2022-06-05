@@ -1,7 +1,8 @@
-
 from flask import Flask
 from redis import Redis
 import rq_dashboard
+import redis
+import time
 
 app = Flask(__name__)
 app.config.from_object(rq_dashboard.default_settings)

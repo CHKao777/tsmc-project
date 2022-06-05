@@ -23,18 +23,31 @@ class GoogleCrawler():
 
         self.job_result = []
 
+<<<<<<< HEAD
         self.connection = Redis('redis-service', 6379)
         self.rq = Queue(connection=self.connection)
         self.rq.empty()
 
         myclient = pymongo.MongoClient("mongodb://mongodb-service:27017/")
+=======
+        self.connection = Redis('redis', 6379)
+        # self.connection = Redis('localhost', 6379)
+        self.rq = Queue(connection=self.connection)
+        self.rq.empty()
+
+        mongodb_server_hostname = 'mongodb-server'
+        mongodb_client_connection = 'mongodb://{}:27017/'.format(mongodb_server_hostname)
+        myclient = pymongo.MongoClient(mongodb_client_connection)
+
+        # myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+>>>>>>> e4b4b08fc875164a598132c50f0b1411fcf111f1
         self.mydb = myclient['tsmc_project']
         self.url_counts_collection = self.mydb['url_counts']
         self.word_counts_collection = self.mydb['word_counts']
 
         self.patience = 600
 
-    def get_source(self,url):
+    def get_source(self, url):
         try:
             session = HTMLSession()
             response = session.get(url, timeout=10)

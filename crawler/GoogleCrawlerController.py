@@ -3,16 +3,22 @@ import pymongo
 import datetime
 
 
+<<<<<<< HEAD
 myclient = pymongo.MongoClient("mongodb://mongodb-service:27017/")
+=======
+# myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+mongodb_server_hostname = 'mongodb-server'
+mongodb_client_connection = 'mongodb://{}:27017/'.format(mongodb_server_hostname)
+myclient = pymongo.MongoClient(mongodb_client_connection)
+>>>>>>> e4b4b08fc875164a598132c50f0b1411fcf111f1
 mydb = myclient['tsmc_project']
-crawler_logs_collection = mydb['crawler_logs']
 
-def add_new_date(num_week):
-    start_date = datetime.date.today() - \
-        datetime.timedelta(days = 7 + datetime.date.today().weekday())
+def add_new_date(crawler_logs_collection, num_week, start_date):
+
     if_add_new_date = False
     for _ in range(num_week):
         x = crawler_logs_collection.find_one({'Date': str(start_date)})
+        
         if x is None:
             json_data = {
                 'Date': str(start_date),
@@ -28,5 +34,9 @@ def add_new_date(num_week):
 
 if __name__ == '__main__':
     while True:
-        add_new_date(30)
+        crawler_logs_collection = mydb['crawler_logs']
+        start_date = datetime.date.today() - \
+        datetime.timedelta(days = 7 + datetime.date.today().weekday())
+
+        add_new_date(crawler_logs_collection, 30, start_date)
         time.sleep(60)
