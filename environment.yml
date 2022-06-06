@@ -34,7 +34,6 @@ dependencies:
   - pyopenssl=22.0.0=pyhd3eb1b0_0
   - pyparsing=3.0.4=pyhd3eb1b0_0
   - pysocks=1.7.1=py310h06a4308_0
-  - pytest=7.1.1=py310h06a4308_0
   - python=3.10.4=h12debd9_0
   - readline=8.1.2=h7f8727e_1
   - regex=2022.3.15=py310h7f8727e_0
@@ -60,12 +59,18 @@ dependencies:
     - fake-useragent==0.1.11
     - importlib-metadata==4.11.4
     - lxml==4.9.0
+    - mirakuru==2.4.2
     - mongomock==4.0.0
     - parse==1.19.0
+    - port-for==0.6.2
+    - psutil==5.9.1
     - pyee==8.2.2
     - pyppeteer==1.0.2
     - pyquery==1.4.3
+    - pytest==6.2.5
     - pytest-cov==3.0.0
+    - pytest-datafiles==2.0.1
+    - pytest-integration==0.2.2
     - pytest-mongodb==2.2.0
     - pyyaml==6.0
     - redis==4.3.3
@@ -74,6 +79,7 @@ dependencies:
     - sentinels==1.0.0
     - six==1.16.0
     - soupsieve==2.3.2.post1
+    - toml==0.10.2
     - w3lib==1.22.0
     - websockets==10.3
     - wrapt==1.14.1

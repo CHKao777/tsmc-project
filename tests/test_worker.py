@@ -1,6 +1,13 @@
 import crawler.worker as cworker
 
 
+def test_getHTML():
+    htmlText = '<div>aa</div> <p>aa</p>'
+    soup = cworker.html_parser(htmlText)
+    text = cworker.html_getText(soup)
+    assert text == 'aa'
+
+
 def test_company_count():
     text = 'tsmc, tsmc, applied materials'
     timestamp = '1'
@@ -22,8 +29,6 @@ def test_company_count():
     assert(res[0].get('Word_Count') == 2)
     assert(res[1].get('Word_Count') == 1)
 
-    # with open('testData/a.txt', 'r') as f:
-    #     text = f.read()
     text = """
     Intel Corp yesterday said it has placed its first order with ASML Holding NV to purchase the semiconductor industry’s first TWINSCAN EXE: 5200 system, as the US chip giant aims to compete with Taiwan Semiconductor Manufacturing Co (TSMC, 台積電) in advancing to 2-nanometer process technology.
 The Dutch semiconductor equipment maker’s TWINSCAN EXE:5200 system is an extreme ultraviolet (EUV) high-volume production system with a high numerical aperture (NA) that can produce 220 wafers per hour, more than the 150 wafers that its previous generation TWINSCAN EXE:5000 system can handle. 

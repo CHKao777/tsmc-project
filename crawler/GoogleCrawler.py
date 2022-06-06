@@ -174,8 +174,6 @@ class GoogleCrawler():
 def collect_word_count(job_result):
     word_count = Counter()
     for item in job_result:
-        print(item)
-        print(item['Word_Count'])
         word_count[item['Company']] += item['Word_Count']
     return word_count
 

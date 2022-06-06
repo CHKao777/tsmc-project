@@ -44,7 +44,7 @@ def html_parser(htmlText):
 def html_getText(soup):
     orignal_text = ''
     for el in soup.find_all('p'):
-        orignal_text += ''.join(el.find_all(text=True))
+        orignal_text += ''.join(el.find_all(string=True))
     return orignal_text
     
 def company_count(text, timestamp):
