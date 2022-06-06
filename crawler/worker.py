@@ -7,9 +7,11 @@ import pymongo
 from redis import Redis
 from rq import Queue, Worker
 nltk.download('punkt', quiet=True)
+from collections import Counter
 
 
-keyword_count_dict = {'tsmc': 0, 'asml': 0, 'applied': 0, 'materials': 0, 'sumco': 0}
+# keyword_count_dict = {'tsmc': 0, 'asml': 0, 'applied': 0, 'materials': 0, 'sumco': 0}
+# keyword_count_dict = {'tsmc': 0, 'asml': 0, 'applied': 0, 'materials': 0, 'sumco': 0}
 company_list = ['tsmc', 'asml', 'applied materials', 'sumco']
 
 rds = Redis('redis', 6379)
@@ -47,9 +49,14 @@ def html_getText(soup):
     return orignal_text
     
 def company_count(text, timestamp):
+    keyword_count_dict = Counter()
     words = word_tokenize(text.lower())
-    for word in words:
-        if word in keyword_count_dict:
+    
+    for idx, word in enumerate(words):
+        if idx > 0 and word == 'materials' and words[idx - 1] == 'applied':
+            keyword_count_dict['applied materials'] += 1
+
+        if word in company_list:
             keyword_count_dict[word] += 1
 
     data_array = []
@@ -57,15 +64,16 @@ def company_count(text, timestamp):
         if len(company.split()) == 1:
             count = keyword_count_dict[company]
         else:
-            count = min(keyword_count_dict[company.split()[0]], keyword_count_dict[company.split()[1]])
-        if count == 0:
-            continue
-        json_data = {
-            'Date' : timestamp,
-            'Company' : company, 
-            'Word_Count' : count,
-        }
-        data_array.append(json_data)
+            # count = min(keyword_count_dict[company.split()[0]], keyword_count_dict[company.split()[1]])
+            count = keyword_count_dict['applied materials']
+
+        if count > 0:    
+            json_data = {
+                'Date' : timestamp,
+                'Company' : company, 
+                'Word_Count' : count,
+            }
+            data_array.append(json_data)
     return data_array
     
 if __name__ == '__main__':
