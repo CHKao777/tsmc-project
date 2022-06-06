@@ -10,7 +10,6 @@ from rq.job import Job
 
 from worker import work
 
-
 import pymongo
 
 

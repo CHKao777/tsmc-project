@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   web:
-    image: jayzhan/tsmc-project:rq-dashboard
+    image: chkao777/tsmc-project:rq-dashboard
     build:
       context: .
       target: web

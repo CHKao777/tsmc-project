@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: rq-dashboard
-        image: docker.io/jayzhan/tsmc-project:rq-dashboard
+        image: chkao777/tsmc-project:rq-dashboard
         env:
         - name: GET_HOSTS_FROM
           value: "dns"

@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: crawler
 spec:
-  schedule: "*/10 * * * *"
+  schedule: "0 0 * * 1"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
@@ -16,3 +16,4 @@ spec:
             image: chkao777/tsmc-project:crawler
             imagePullPolicy: Always     
           restartPolicy: OnFailure
+          
