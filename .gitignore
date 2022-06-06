@@ -1,3 +1,4 @@
 check_db.py
 __pycache__
 .pytest_cache
+.coverage
