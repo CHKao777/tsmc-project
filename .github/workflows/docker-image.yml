@@ -7,32 +7,9 @@ on:
     branches: [ "master" ]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
       run: docker-compose up -d
-    - uses: docker/login-action@v2
-    - name: Loging to DockerHub
-      with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Push the Docker image
-    - uses: docker/build-push-action@v3
-      with:
-          context: ./crawler
-          push: true
-          tags: chkao777/tsmc-project:crawler
-    - name: Push the Docker image
-    - uses: docker/build-push-action@v3
-      with:
-          context: ./frontend
-          push: true
-          tags: chkao777/tsmc-project:rq-dashboard
-          
-      
-#       run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
