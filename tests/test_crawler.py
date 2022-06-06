@@ -39,3 +39,9 @@ def test_get_first_weekday_at_last_week():
     assert gcrawler.get_first_weekday_at_last_week(day) == datetime.date(2022, 5, 30)
     day = datetime.date(2022, 1, 9)
     assert gcrawler.get_first_weekday_at_last_week(day) == datetime.date(2021, 12, 27)
+
+
+def test_collect_companies_result():
+    job = [{'Date' : '0', 'Company' : 'tsmc', 'Word_Count' : 1}]
+    res = gcrawler.collect_word_count(job)
+    assert res['tsmc'] == 1

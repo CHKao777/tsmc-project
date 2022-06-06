@@ -2,3 +2,5 @@ check_db.py
 __pycache__
 .pytest_cache
 .coverage
+pytest.xml
+pytest-coverage.txt

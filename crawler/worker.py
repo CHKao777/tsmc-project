@@ -3,7 +3,6 @@ from requests_html import HTMLSession
 from bs4 import BeautifulSoup
 from nltk.tokenize import word_tokenize
 import nltk
-import pymongo
 from redis import Redis
 from rq import Queue, Worker
 nltk.download('punkt', quiet=True)

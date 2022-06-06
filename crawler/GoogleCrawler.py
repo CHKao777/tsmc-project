@@ -11,6 +11,7 @@ from rq.job import Job
 from worker import work
 
 import pymongo
+from collections import Counter
 
 
 class GoogleCrawler():
@@ -73,9 +74,11 @@ class GoogleCrawler():
             self.rq.enqueue_job(job)
             self.job_result.append(job)
     
+
     #檢查self.job_result內的job是否都完成,並將job的執行結果回傳
     def collect_result(self):
-        company_count_dict = {'tsmc': 0, 'asml': 0, 'applied materials': 0, 'sumco': 0}
+        # company_count_dict = {'tsmc': 0, 'asml': 0, 'applied materials': 0, 'sumco': 0}
+        company_count_dict = Counter()
         start_timestamp = time.time()
         for job in self.job_result:
             while not job.is_finished and not job.is_failed:
@@ -85,9 +88,15 @@ class GoogleCrawler():
                     'running correctly if stucked for a long time', flush=True)
                 time.sleep(0.5)
             if job.result:
-                for item in job.result:
-                    company_count_dict[item['Company']] += item['Word_Count']
-        return company_count_dict
+                companies_collection = collect_word_count(job.result)
+                company_count_dict.update(companies_collection)
+                
+        return {
+            'tsmc': company_count_dict['tsmc'],
+            'asml': company_count_dict['asml'],
+            'applied materials': company_count_dict['applied materials'],
+            'sumco': company_count_dict['sumco']
+        }
 
     #針對一個query搜尋url, 最大搜尋數量=max_search(總數通常都不會超過1000)
     def google_search_one_query(self, query, time_start, time_end, max_search):
@@ -160,6 +169,15 @@ class GoogleCrawler():
             except AttributeError as e:
                 continue
         return output
+
+
+def collect_word_count(job_result):
+    word_count = Counter()
+    for item in job_result:
+        print(item)
+        print(item['Word_Count'])
+        word_count[item['Company']] += item['Word_Count']
+    return word_count
 
 
 def add_new_date(crawler_logs_collection, num_week, start_date):
