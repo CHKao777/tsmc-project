@@ -15,4 +15,4 @@
 
 ### Digital Business: Internet Volume
 
-![image] https://github.com/CHKao777/tsmc-project/blob/master/figures/word_cnt.jpg
+![image] (https://github.com/CHKao777/tsmc-project/blob/master/figures/word_cnt.jpg)
