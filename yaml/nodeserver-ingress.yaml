@@ -3,13 +3,18 @@ kind: Ingress
 metadata:
   name: nodeserver-ingress
 spec:
+  defaultBackend:
+    service:
+      name: nodeserver-service
+      port:
+        number: 3000
   rules:
   - http:
       paths:
-      - path: /
+      - path: /rq
         pathType: Prefix
         backend:
           service:
-            name: nodeserver-service
+            name: frontend
             port:
-              number: 3000
+              number: 5000
